@@ -1,0 +1,173 @@
+---
+import Layout from '../layout/Layout.astro'
+---
+
+<Layout
+  title="SCIetetrece - Inbox"
+>
+  <h1>Servicio de Correo Interno de la 713 (SCIetetrece)</h1>
+  <hr>
+  <button id="cerrarSesion">
+	  Cerrar sesi√n
+  </button>
+  <div class="container">
+      <div class="inbox-section">
+          <h2>Bandeja de Entrada</h2>
+          <table class="email-table">
+              <thead>
+                  <tr>
+                      <th class="sender">Remitente</th>
+                      <th class="subject">Asunto</th>
+                  </tr>
+              </thead>
+              <tbody id="emailList">
+              </tbody>
+          </table>
+      </div>
+      
+      <div class="email-preview" id="emailPreview">
+          <div class="email-header">
+              <h3 class="email-subject" id="previewSubject"></h3>
+              <div class="email-meta">
+                  De: <span id="previewSender"></span> | 
+              </div>
+          </div>
+          <div class="email-body" id="previewBody"></div>
+      </div>
+  </div>
+
+  <button class="open-button" id="openFormBtn">Redactar correo</button>
+
+  <div class="form-popup" id="myForm">
+      <form class="form-container">
+          <label for="asunto">Asunto:</label>
+          <input type="text" id="asunto" name="asunto" required>
+          <br>
+
+          <label for="recipiente">Destinatario:</label>
+          <input type="text" id="recipiente" name="recipiente" required>
+          <br>
+
+          <label for="cuerpo">Cuerpo:</label>
+          <textarea id="cuerpo" name="cuerpo" required></textarea>
+          <br>
+
+          <button type="submit" id="sendMail" class="btn">Enviar</button>
+          <button type="button" class="btn cancel" id="closeFormBtn">Cerrar</button>
+      </form>
+  </div>
+
+  <script>
+      function openForm() {
+          document.getElementById("myForm").style.display = "block";
+      }
+
+      function closeForm() {
+          document.getElementById("myForm").style.display = "none";
+      }
+
+      function showEmailPreview(email) {
+          document.getElementById('previewSubject').textContent = email.subject;
+          document.getElementById('previewSender').textContent = email.sender;
+          document.getElementById('previewBody').textContent = email.body;
+          
+          const preview = document.getElementById('emailPreview');
+          preview.classList.add('active');
+      }
+
+      document.addEventListener('DOMContentLoaded', async () => {
+          // Botones del formulario
+          const openButton = document.getElementById('openFormBtn');
+          const closeButton = document.getElementById('closeFormBtn');
+          const form = document.querySelector('form');
+	  const $emailList = document.querySelector('#emailList')
+	  const $cerrarSesion = document.querySelector('#cerrarSesion')
+	  const $asunto = document.querySelector('#asunto')
+	  const $recipiente = document.querySelector('#recipiente')
+	  const $cuerpo = document.querySelector('#cuerpo')
+	  const $sendMail = document.querySelector('#sendMail')
+          
+          if (openButton) {
+              openButton.addEventListener('click', openForm);
+          }
+          
+          if (closeButton) {
+              closeButton.addEventListener('click', closeForm);
+          }
+          
+          if (form) {
+              form.addEventListener('submit', function(e) {
+                  e.preventDefault();
+                  alert('Correo enviado (simulaci√≥n)');
+                  closeForm();
+                  form.reset();
+              });
+          }
+
+	   const usrAddress = JSON.parse(localStorage.getItem('addr'))
+
+
+	   const cargarMails = async () => {
+
+		const { address } = usrAddress
+
+          	const result = await fetch(`http://192.168.1.105:3000/mail/inbox?address=${address}`)
+      	  	const mails = await result.json()
+
+	      	if (mails.length === 0) {
+		      $emailList.innerHTML = 'No tenes mails.'
+        	      return
+	      	}
+
+	  	mails.forEach(mail => {
+			const { from_user, subject } = mail
+
+			$emailList.innerHTML += `
+				<tr>
+					<td>
+						${from_user}
+					</td>
+					<td>
+						${subject}
+					</td>
+				</tr>
+		  	`
+	  	})
+	   }
+
+
+	  $cerrarSesion.addEventListener('click', () => {
+		localStorage.clear()
+		window.location.href = '/'
+	  })
+
+	  cargarMails()
+
+	  $sendMail.addEventListener('click', async (e) => {
+		e.preventDefault()
+
+		const { username } = usrAddress
+
+		const body = {
+			from: username,
+			to: $recipiente.value,
+			subject: $asunto.value,
+			body: $cuerpo.value
+		}
+
+		await fetch('http://192.168.1.105:3000/mail/send', {
+			method: "post",
+			headers: {
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify(body)
+		})
+	  })
+
+      });
+
+
+
+
+  </script>
+</Layout>
