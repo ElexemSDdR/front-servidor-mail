@@ -1,0 +1,32 @@
+<button id="cerrarSesion">
+  Cerrar sesión
+</button>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const $cerrarSesion = document.querySelector('#cerrarSesion') as HTMLButtonElement
+
+    $cerrarSesion.addEventListener('click', () => {
+      const confirmacion = confirm('¿Estas seguro que queres cerrar la sesión?')
+      if (!confirmacion) return 
+      localStorage.clear()
+      window.location.href = '/'
+    })
+  })
+</script>
+
+<style>
+  #cerrarSesion {
+    border: none;
+    border-radius: 5px;
+    padding-inline: 8px;
+    padding-block: 6px;
+    background-color: #e74c3c;
+    opacity: .8;
+    color: #ffffff;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+</style>

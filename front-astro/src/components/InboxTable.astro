@@ -1,0 +1,46 @@
+<div class="container">
+  <div class="inbox-section">
+    <h2>Bandeja de Entrada</h2>
+    <table class="email-table">
+      <thead>
+          <tr>
+            <th class="sender">Remitente</th>
+            <th class="subject">Asunto</th>
+          </tr>
+      </thead>
+      <tbody id="emailList">
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  const $emailList = document.querySelector('#emailList')
+  const usrAddress = JSON.parse(localStorage.getItem('addr'))
+
+  const cargarMails = async () => {
+    const { address } = usrAddress
+
+    const result = await fetch(`http://192.168.1.105:3000/mail/inbox?address=${address}`)
+    const mails = await result.json()
+    if (mails.length === 0) {
+      $emailList.innerHTML = 'No tenes mails.'
+      return
+    }
+
+    mails.forEach(mail => {
+      const { from_user, subject, id } = mail
+
+      $emailList.innerHTML += `
+        <tr class="individualMail" id="${id}">
+            <td>
+            ${from_user}
+          </td>
+          <td>
+            ${subject}
+          </td>
+        </tr>
+        `
+    })
+  }
+</script>

@@ -1,173 +1,107 @@
 ---
 import Layout from '../layout/Layout.astro'
+import Header from '../components/Header.astro'
+import InboxTable from '../components/InboxTable.astro'
+import CloseSession from '../components/CloseSession.astro'
+import CreateMail from '../components/CreateMail.astro'
+import CloseIcon from '../components/icons/CloseIcon.astro'
 ---
 
 <Layout
   title="SCIetetrece - Inbox"
 >
-  <h1>Servicio de Correo Interno de la 713 (SCIetetrece)</h1>
-  <hr>
-  <button id="cerrarSesion">
-	  Cerrar sesi√n
-  </button>
-  <div class="container">
-      <div class="inbox-section">
-          <h2>Bandeja de Entrada</h2>
-          <table class="email-table">
-              <thead>
-                  <tr>
-                      <th class="sender">Remitente</th>
-                      <th class="subject">Asunto</th>
-                  </tr>
-              </thead>
-              <tbody id="emailList">
-              </tbody>
-          </table>
-      </div>
-      
-      <div class="email-preview" id="emailPreview">
-          <div class="email-header">
-              <h3 class="email-subject" id="previewSubject"></h3>
-              <div class="email-meta">
-                  De: <span id="previewSender"></span> | 
-              </div>
-          </div>
-          <div class="email-body" id="previewBody"></div>
-      </div>
-  </div>
-
-  <button class="open-button" id="openFormBtn">Redactar correo</button>
-
-  <div class="form-popup" id="myForm">
-      <form class="form-container">
-          <label for="asunto">Asunto:</label>
-          <input type="text" id="asunto" name="asunto" required>
-          <br>
-
-          <label for="recipiente">Destinatario:</label>
-          <input type="text" id="recipiente" name="recipiente" required>
-          <br>
-
-          <label for="cuerpo">Cuerpo:</label>
-          <textarea id="cuerpo" name="cuerpo" required></textarea>
-          <br>
-
-          <button type="submit" id="sendMail" class="btn">Enviar</button>
-          <button type="button" class="btn cancel" id="closeFormBtn">Cerrar</button>
-      </form>
-  </div>
-
-  <script>
-      function openForm() {
-          document.getElementById("myForm").style.display = "block";
-      }
-
-      function closeForm() {
-          document.getElementById("myForm").style.display = "none";
-      }
-
-      function showEmailPreview(email) {
-          document.getElementById('previewSubject').textContent = email.subject;
-          document.getElementById('previewSender').textContent = email.sender;
-          document.getElementById('previewBody').textContent = email.body;
-          
-          const preview = document.getElementById('emailPreview');
-          preview.classList.add('active');
-      }
-
-      document.addEventListener('DOMContentLoaded', async () => {
-          // Botones del formulario
-          const openButton = document.getElementById('openFormBtn');
-          const closeButton = document.getElementById('closeFormBtn');
-          const form = document.querySelector('form');
-	  const $emailList = document.querySelector('#emailList')
-	  const $cerrarSesion = document.querySelector('#cerrarSesion')
-	  const $asunto = document.querySelector('#asunto')
-	  const $recipiente = document.querySelector('#recipiente')
-	  const $cuerpo = document.querySelector('#cuerpo')
-	  const $sendMail = document.querySelector('#sendMail')
-          
-          if (openButton) {
-              openButton.addEventListener('click', openForm);
-          }
-          
-          if (closeButton) {
-              closeButton.addEventListener('click', closeForm);
-          }
-          
-          if (form) {
-              form.addEventListener('submit', function(e) {
-                  e.preventDefault();
-                  alert('Correo enviado (simulaci√≥n)');
-                  closeForm();
-                  form.reset();
-              });
-          }
-
-	   const usrAddress = JSON.parse(localStorage.getItem('addr'))
-
-
-	   const cargarMails = async () => {
-
-		const { address } = usrAddress
-
-          	const result = await fetch(`http://192.168.1.105:3000/mail/inbox?address=${address}`)
-      	  	const mails = await result.json()
-
-	      	if (mails.length === 0) {
-		      $emailList.innerHTML = 'No tenes mails.'
-        	      return
-	      	}
-
-	  	mails.forEach(mail => {
-			const { from_user, subject } = mail
-
-			$emailList.innerHTML += `
-				<tr>
-					<td>
-						${from_user}
-					</td>
-					<td>
-						${subject}
-					</td>
-				</tr>
-		  	`
-	  	})
-	   }
-
-
-	  $cerrarSesion.addEventListener('click', () => {
-		localStorage.clear()
-		window.location.href = '/'
-	  })
-
-	  cargarMails()
-
-	  $sendMail.addEventListener('click', async (e) => {
-		e.preventDefault()
-
-		const { username } = usrAddress
-
-		const body = {
-			from: username,
-			to: $recipiente.value,
-			subject: $asunto.value,
-			body: $cuerpo.value
-		}
-
-		await fetch('http://192.168.1.105:3000/mail/send', {
-			method: "post",
-			headers: {
-				"Content-Type": "application/json"
-			},
-			body: JSON.stringify(body)
-		})
-	  })
-
-      });
-
-
-
-
-  </script>
+  <CloseSession />
+  <dialog id="viewMailDialog">
+  </dialog>
+  <InboxTable />
+  <CreateMail />
 </Layout>
+
+<script is:inline>
+  const $individualMails = document.querySelectorAll('.individualMail')
+  const $viewMailDialog = document.querySelector('#viewMailDialog')
+
+  const showMail = async (id) => {
+    const mailRes = await fetch('http://localhost:4322/mail/mail', {
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ id: id })
+    })
+
+    const mail = await mailRes.json()
+
+    $viewMailDialog.showModal()
+
+    $viewMailDialog.innerHTML = `
+    <button onclick="$viewMailDialog.close()">
+      <svg viewBox="0 0 24 24" fill="none" width="32" height="32" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill-rule="evenodd" clip-rule="evenodd" d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12ZM8.96963 8.96965C9.26252 8.67676 9.73739 8.67676 10.0303 8.96965L12 10.9393L13.9696 8.96967C14.2625 8.67678 14.7374 8.67678 15.0303 8.96967C15.3232 9.26256 15.3232 9.73744 15.0303 10.0303L13.0606 12L15.0303 13.9696C15.3232 14.2625 15.3232 14.7374 15.0303 15.0303C14.7374 15.3232 14.2625 15.3232 13.9696 15.0303L12 13.0607L10.0303 15.0303C9.73742 15.3232 9.26254 15.3232 8.96965 15.0303C8.67676 14.7374 8.67676 14.2625 8.96965 13.9697L10.9393 12L8.96963 10.0303C8.67673 9.73742 8.67673 9.26254 8.96963 8.96965Z" fill="#e74c3c"></path> </g></svg>
+    </button>
+      <span>
+        <h4>De</h4>: ${mail.from_user}
+      </span>
+      <span>
+        <h4>Asunto</h4>: ${mail.subject}
+      </span>
+    <span class="bodySpan"><h4>Cuerpo</h4>:</span>
+      <p>
+        ${mail.body}
+      </p>
+      `
+  }
+</script>
+
+<style>
+  dialog[open] {
+    border: none;
+    border-radius: 15px;
+    outline: none;
+    display: flex;
+    flex-direction: column;
+    max-width: 840px;
+    min-width: 650px;
+    max-height: 580px;
+    overflow: hidden;
+    position: relative;
+    padding-top: 4rem;
+
+    button {
+      display: block;
+      margin-bottom: 20px;
+      background-color: transparent;
+      border: none;
+      cursor: pointer;
+      align-self: flex-start;
+      position: absolute;
+      left: 8px;
+      top: 15px;
+
+      &:hover {
+          opacity: .8;
+      }
+    }
+
+    span {
+      display: block;
+      margin-bottom: 20px;
+      h4 {
+        display: inline;
+      }
+    }
+
+    .bodySpan {
+      margin-bottom: 0;
+    }
+
+    p {
+      margin-top: 10px;
+    }
+  }
+
+  dialog::backdrop {
+    backdrop-filter: blur(55px);
+    background-color: #444444c3;
+    opacity: .8;
+  }
+</style>

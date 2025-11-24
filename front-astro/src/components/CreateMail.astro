@@ -1,0 +1,174 @@
+---
+import type { Address } from "../../types/env"
+const API = import.meta.env.PUBLIC_API
+const res = await fetch(`${API}user/users`)
+const possibleAddressToSend = await res.json()
+---
+
+<button class="open-button" id="openFormBtn">Redactar correo</button>
+<div class="form-popup" id="myForm">
+    <form class="form-container">
+        <label for="asunto">Asunto:</label>
+        <input type="text" id="asunto" name="asunto" required>
+        <br>
+
+        <label for="recipiente">Destinatario:</label>
+        <select id="recipiente" name="recipiente" required>
+          <option value="default" selected disabled>Seleccione un usuario</option>
+          {
+            possibleAddressToSend.map((addr: { address: Address }) => {
+              const { address } = addr
+              return (
+                <option value={address}>
+                  {address}
+                </option>
+              )
+            })
+          }
+        </select>
+        <br>
+        <br>
+
+        <label for="cuerpo">Cuerpo:</label>
+        <textarea id="cuerpo" name="cuerpo" required></textarea>
+        <br>
+
+        <button type="submit" id="sendMail" class="btn">Enviar</button>
+        <button type="button" class="btn cancel" id="closeFormBtn">Cerrar</button>
+    </form>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const openButton = document.getElementById('openFormBtn')
+    const closeButton = document.getElementById('closeFormBtn')
+    const $myForm = document.querySelector('#myForm') as HTMLDivElement
+    const $formContainer = document.querySelector('.form-container') as HTMLFormElement
+    const $sendMail = document.querySelector('#sendMail') as HTMLButtonElement
+    const $asunto = document.querySelector('#asunto') as HTMLInputElement
+    const $recipiente = document.querySelector('#recipiente') as HTMLSelectElement
+    const $cuerpo = document.querySelector('#cuerpo') as HTMLTextAreaElement
+
+    const usrAddress = JSON.parse(localStorage.getItem('addr'))
+
+    const openForm = () => $myForm.style.display = "block";
+
+    const closeForm = () => $myForm.style.display = "none";
+
+    if (openButton) openButton.addEventListener('click', openForm)
+    if (closeButton) closeButton.addEventListener('click', closeForm)
+
+    $sendMail.addEventListener('click', async (e) => {
+      e.preventDefault()
+
+      if ($recipiente.value === "default") {
+        alert('Indique un usuario para mandar un mail.')
+        return
+      }
+
+      const { username } = usrAddress
+
+      const body = {
+        from: username,
+        to: $recipiente.value,
+        subject: $asunto.value,
+        body: $cuerpo.value
+      }
+
+      await fetch('http://localhost:4322/mail/send', {
+        method: "post",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+      })
+
+      $formContainer.reset()
+      closeForm()
+    })
+  })
+</script>
+
+<style>
+  #recipiente {
+    width: 100%;
+    margin-top: 5px;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+  }
+
+  .form-popup {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    right: 15px;
+    border: 3px solid #f1f1f1;
+    z-index: 9;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+
+  .form-container {
+    max-width: 300px;
+    padding: 10px;
+    background-color: white;
+  }
+
+  .form-container textarea {
+    min-height: 100px;
+  }
+
+  .form-container input[type=text]:focus, 
+  .form-container textarea:focus {
+    background-color: #ddd;
+    outline: none;
+  }
+
+  .form-container .btn {
+    background-color: #04AA6D;
+    color: white;
+    padding: 16px 20px;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 10px;
+    opacity: 0.8;
+    border-radius: 4px;
+  }
+
+  .form-container .cancel {
+    background-color: #e74c3c;
+  }
+
+  .form-container .btn:hover, .open-button:hover {
+    opacity: 1;
+  }
+
+  .form-container input[type=text], 
+  .form-container textarea {
+    border-radius: 5px;
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0 22px 0;
+    border: none;
+    background: #f1f1f1;
+    resize: vertical;
+  }
+
+  .open-button {
+    background-color: #3498db;
+    color: white;
+    padding: 16px 20px;
+    border: none;
+    cursor: pointer;
+    opacity: 0.9;
+    position: fixed;
+    bottom: 23px;
+    right: 28px;
+    width: 280px;
+    border-radius: 4px;
+    font-size: 16px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  }
+</style>
