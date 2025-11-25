@@ -21,7 +21,13 @@
   const cargarMails = async () => {
     const { address } = usrAddress
 
-    const result = await fetch(`http://192.168.1.105:3000/mail/inbox?address=${address}`)
+    const result = await fetch(`http://192.168.1.105:3000/mail/inbox`, {
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ address: address })
+    })
     const mails = await result.json()
     if (mails.length === 0) {
       $emailList.innerHTML = 'No tenes mails.'
@@ -32,7 +38,7 @@
       const { from_user, subject, id } = mail
 
       $emailList.innerHTML += `
-        <tr class="individualMail" id="${id}">
+        <tr class="individualMail" onclick="showMail(${parseInt(id)})">
             <td>
             ${from_user}
           </td>
@@ -43,4 +49,5 @@
         `
     })
   }
+  cargarMails()
 </script>

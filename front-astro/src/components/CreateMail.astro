@@ -1,7 +1,7 @@
 ---
 import type { Address } from "../../types/env"
 const API = import.meta.env.PUBLIC_API
-const res = await fetch(`${API}user/users`)
+const res = await fetch(`http://192.168.1.105:3000/user/users`)
 const possibleAddressToSend = await res.json()
 ---
 
@@ -75,7 +75,7 @@ const possibleAddressToSend = await res.json()
         body: $cuerpo.value
       }
 
-      await fetch('http://localhost:4322/mail/send', {
+      await fetch('http://192.168.1.105:3000/mail/send', {
         method: "post",
         headers: {
           "Content-Type": "application/json"

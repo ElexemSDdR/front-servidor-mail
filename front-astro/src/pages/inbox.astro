@@ -22,7 +22,7 @@ import CloseIcon from '../components/icons/CloseIcon.astro'
   const $viewMailDialog = document.querySelector('#viewMailDialog')
 
   const showMail = async (id) => {
-    const mailRes = await fetch('http://localhost:4322/mail/mail', {
+    const mailRes = await fetch('http://192.168.1.105:3000/mail/mail', {
       method: 'post',
       headers: {
         'Content-Type': 'application/json'

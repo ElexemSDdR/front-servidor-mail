@@ -1,4 +1,8 @@
-front-astro/dist/
-front-astro/.vscode/
-front-astro/node_modules/
-.pnpm-store/
+# Folders
+dist/
+.vscode/
+node_modules/
+
+# Env variables
+.env
+.env.local
